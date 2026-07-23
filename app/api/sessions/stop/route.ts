@@ -8,13 +8,19 @@ export async function POST(req: Request) {
   try {
     const currentUser = await syncCurrentUser();
     const body = await req.json().catch(() => ({}));
-    const { sessionId, note } = body;
+    const { sessionId, taskId, note } = body;
 
     await connectToDatabase();
 
     let session;
     if (sessionId) {
       session = await TimeSession.findById(sessionId);
+    } else if (taskId) {
+      session = await TimeSession.findOne({
+        task: taskId,
+        user: currentUser._id,
+        endTime: null,
+      });
     } else {
       // Default to user's currently running active session
       session = await TimeSession.findOne({
