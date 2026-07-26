@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatDuration, formatDateTime } from "@/lib/time";
+import { formatDuration } from "@/lib/time";
 import {
   LayoutDashboard,
   PlusCircle,
@@ -23,6 +23,8 @@ import {
   HelpCircle,
   ArrowRight,
   ShieldAlert,
+  Folder,
+  AlertCircle,
 } from "lucide-react";
 
 interface AdminTaskItem {
@@ -33,6 +35,10 @@ interface AdminTaskItem {
   estimatedMinutes?: number;
   totalDurationMinutes: number;
   sessionCount: number;
+  project?: {
+    _id: string;
+    name: string;
+  };
   assignedTo?: {
     _id: string;
     name: string;
@@ -43,6 +49,8 @@ interface AdminTaskItem {
     name: string;
   };
   createdAt: string;
+  isStale?: boolean;
+  daysInactive?: number;
 }
 
 export default function AdminDashboardPage() {
@@ -176,8 +184,11 @@ export default function AdminDashboardPage() {
 
   const filteredTasks = tasks.filter((t) => {
     if (statusFilter === "all") return true;
+    if (statusFilter === "stale") return t.isStale;
     return t.status === statusFilter;
   });
+
+  const staleCount = tasks.filter((t) => t.isStale).length;
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
@@ -189,12 +200,18 @@ export default function AdminDashboardPage() {
             Admin Command Center
           </h1>
           <p className="text-sm text-muted-foreground">
-            Monitor intern activity live, assign tasks, and manage team performance.
+            Monitor intern activity live, assign tasks, manage projects, and oversee team performance.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <Badge variant="secondary" className="px-3 py-1 bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/30 font-medium">
+          <Link href="/admin/projects">
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white gap-2 cursor-pointer text-xs font-semibold">
+              <Folder className="w-4 h-4" />
+              Manage Projects
+            </Button>
+          </Link>
+          <Badge variant="secondary" className="px-3 py-1.5 bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/30 font-medium">
             Role: Admin
           </Badge>
         </div>
@@ -236,11 +253,16 @@ export default function AdminDashboardPage() {
         >
           <ListTodo className="w-4 h-4" />
           All Tasks ({tasks.length})
+          {staleCount > 0 && (
+            <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-amber-500 text-white font-bold">
+              {staleCount} stale
+            </span>
+          )}
         </button>
       </div>
 
       {/* Tab Content */}
-      {activeTab === "live" && <LiveMonitoringDashboard />}
+      {activeTab === "live" && <LiveMonitoringDashboard showProjectFilter={true} />}
 
       {activeTab === "create" && (
         <div className="max-w-2xl mx-auto">
@@ -268,6 +290,7 @@ export default function AdminDashboardPage() {
                 <option value="in_progress">In Progress</option>
                 <option value="paused">Paused</option>
                 <option value="completed">Completed</option>
+                {staleCount > 0 && <option value="stale">Stale Tasks ({staleCount})</option>}
               </select>
             </div>
           </div>
@@ -295,12 +318,30 @@ export default function AdminDashboardPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {filteredTasks.map((t) => (
                 <Link key={t._id} href={`/tasks/${t._id}`} className="group block focus:outline-none">
-                  <Card className="h-full hover:border-zinc-400 dark:hover:border-zinc-600 transition-all shadow-sm flex flex-col justify-between">
+                  <Card
+                    className={`h-full hover:border-zinc-400 dark:hover:border-zinc-600 transition-all shadow-sm flex flex-col justify-between ${
+                      t.isStale ? "border-amber-500/40 bg-amber-500/[0.02]" : ""
+                    }`}
+                  >
                     <CardHeader className="space-y-2 pb-3">
                       <div className="flex items-start justify-between gap-2">
-                        <CardTitle className="text-base font-semibold group-hover:text-primary transition-colors line-clamp-2">
-                          {t.title}
-                        </CardTitle>
+                        <div className="space-y-1">
+                          <CardTitle className="text-base font-semibold group-hover:text-primary transition-colors line-clamp-2">
+                            {t.title}
+                          </CardTitle>
+                          {t.project?.name && (
+                            <Badge variant="outline" className="text-[10px] font-normal bg-zinc-100 dark:bg-zinc-800">
+                              <Folder className="w-3 h-3 text-muted-foreground mr-1" />
+                              {t.project.name}
+                            </Badge>
+                          )}
+                          {t.isStale && (
+                            <Badge variant="outline" className="ml-1 bg-amber-500/15 text-amber-900 dark:text-amber-200 border-amber-500/40 text-[10px] gap-1 font-bold">
+                              <AlertCircle className="w-3 h-3 text-amber-600" />
+                              Stale ({t.daysInactive}d inactive)
+                            </Badge>
+                          )}
+                        </div>
                         {renderStatusBadge(t.status)}
                       </div>
                       <CardDescription className="line-clamp-2 text-xs">

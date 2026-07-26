@@ -2,16 +2,31 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/roles";
 import { connectToDatabase } from "@/lib/db";
 import { TimeSession } from "@/models/TimeSession";
+import { Task } from "@/models/Task";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     await requireAdmin();
+    const { searchParams } = new URL(req.url);
+    const projectId = searchParams.get("projectId");
+
     await connectToDatabase();
 
-    // Fetch all currently running sessions (endTime: null) across all users
-    const activeSessions = await TimeSession.find({ endTime: null })
+    let query: any = { endTime: null };
+
+    if (projectId) {
+      const taskIds = await Task.find({ project: projectId }).distinct("_id");
+      query.task = { $in: taskIds };
+    }
+
+    // Fetch active sessions matching query
+    const activeSessions = await TimeSession.find(query)
       .populate("user", "name clerkId role")
-      .populate("task", "title description status estimatedMinutes")
+      .populate({
+        path: "task",
+        select: "title description status estimatedMinutes project",
+        populate: { path: "project", select: "name" },
+      })
       .sort({ startTime: -1 })
       .lean();
 

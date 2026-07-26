@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { PlusCircle, CheckCircle2, UserCheck, Clock, FileText, AlertCircle } from "lucide-react";
+import { PlusCircle, CheckCircle2, UserCheck, Clock, FileText, AlertCircle, Folder } from "lucide-react";
 
 interface InternUser {
   _id: string;
@@ -14,17 +14,27 @@ interface InternUser {
   role: string;
 }
 
-interface CreateTaskFormProps {
-  onSuccess?: () => void;
+interface ProjectItem {
+  _id: string;
+  name: string;
+  status: string;
 }
 
-export function CreateTaskForm({ onSuccess }: CreateTaskFormProps) {
+interface CreateTaskFormProps {
+  onSuccess?: () => void;
+  defaultProjectId?: string;
+}
+
+export function CreateTaskForm({ onSuccess, defaultProjectId }: CreateTaskFormProps) {
   const [interns, setInterns] = useState<InternUser[]>([]);
+  const [projects, setProjects] = useState<ProjectItem[]>([]);
   const [loadingInterns, setLoadingInterns] = useState<boolean>(true);
+  const [loadingProjects, setLoadingProjects] = useState<boolean>(true);
 
   // Form states
   const [title, setTitle] = useState<string>("");
   const [description, setDescription] = useState<string>("");
+  const [projectId, setProjectId] = useState<string>(defaultProjectId || "");
   const [assignedTo, setAssignedTo] = useState<string>("");
   const [estimatedMinutes, setEstimatedMinutes] = useState<string>("");
 
@@ -33,33 +43,54 @@ export function CreateTaskForm({ onSuccess }: CreateTaskFormProps) {
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    async function fetchInterns() {
+    async function fetchData() {
       try {
         setLoadingInterns(true);
-        const res = await fetch("/api/users?role=intern");
-        if (res.ok) {
-          const data = await res.json();
-          if (data.success && Array.isArray(data.users)) {
-            setInterns(data.users);
-            if (data.users.length > 0) {
-              setAssignedTo(data.users[0]._id);
+        setLoadingProjects(true);
+
+        const [usersRes, projectsRes] = await Promise.all([
+          fetch("/api/users?role=intern"),
+          fetch("/api/projects"),
+        ]);
+
+        if (usersRes.ok) {
+          const uData = await usersRes.json();
+          if (uData.success && Array.isArray(uData.users)) {
+            setInterns(uData.users);
+            if (uData.users.length > 0) {
+              setAssignedTo(uData.users[0]._id);
+            }
+          }
+        }
+
+        if (projectsRes.ok) {
+          const pData = await projectsRes.json();
+          if (pData.success && Array.isArray(pData.projects)) {
+            setProjects(pData.projects);
+            if (pData.projects.length > 0 && !defaultProjectId) {
+              setProjectId(pData.projects[0]._id);
             }
           }
         }
       } catch (err) {
-        console.error("Failed to load interns:", err);
+        console.error("Failed to load form data:", err);
       } finally {
         setLoadingInterns(false);
+        setLoadingProjects(false);
       }
     }
 
-    fetchInterns();
-  }, []);
+    fetchData();
+  }, [defaultProjectId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) {
       setError("Task title is required.");
+      return;
+    }
+    if (!projectId) {
+      setError("Please select a target project.");
       return;
     }
     if (!assignedTo) {
@@ -75,6 +106,7 @@ export function CreateTaskForm({ onSuccess }: CreateTaskFormProps) {
       const payload = {
         title: title.trim(),
         description: description.trim(),
+        project: projectId,
         assignedTo,
         estimatedMinutes: estimatedMinutes ? parseInt(estimatedMinutes, 10) : undefined,
       };
@@ -117,7 +149,7 @@ export function CreateTaskForm({ onSuccess }: CreateTaskFormProps) {
           Create New Task
         </CardTitle>
         <CardDescription>
-          Assign work tasks to interns and set time estimates.
+          Assign work tasks to interns under a project and set time estimates.
         </CardDescription>
       </CardHeader>
 
@@ -138,6 +170,35 @@ export function CreateTaskForm({ onSuccess }: CreateTaskFormProps) {
               <AlertDescription className="text-xs">{successMsg}</AlertDescription>
             </Alert>
           )}
+
+          {/* Project selector */}
+          <div className="space-y-1.5">
+            <label htmlFor="project-select" className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5">
+              <Folder className="w-3.5 h-3.5" />
+              Project <span className="text-destructive">*</span>
+            </label>
+            {loadingProjects ? (
+              <div className="h-9 w-full bg-zinc-100 dark:bg-zinc-800 rounded-md animate-pulse" />
+            ) : (
+              <select
+                id="project-select"
+                value={projectId}
+                onChange={(e) => setProjectId(e.target.value)}
+                className="w-full h-9 rounded-md border border-input bg-white dark:bg-zinc-900 px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                required
+              >
+                {projects.length === 0 ? (
+                  <option value="">No projects found (create a project first)</option>
+                ) : (
+                  projects.map((proj) => (
+                    <option key={proj._id} value={proj._id}>
+                      {proj.name} ({proj.status})
+                    </option>
+                  ))
+                )}
+              </select>
+            )}
+          </div>
 
           <div className="space-y-1.5">
             <label htmlFor="task-title" className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5">
@@ -215,7 +276,7 @@ export function CreateTaskForm({ onSuccess }: CreateTaskFormProps) {
           <div className="pt-2">
             <Button
               type="submit"
-              disabled={submitting || loadingInterns}
+              disabled={submitting || loadingInterns || loadingProjects || projects.length === 0}
               className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-medium gap-2 cursor-pointer"
             >
               <PlusCircle className="w-4 h-4" />

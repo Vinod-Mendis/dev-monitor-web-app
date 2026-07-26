@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDuration } from "@/lib/time";
-import { Clock, CheckCircle2, PlayCircle, PauseCircle, HelpCircle, ArrowRight } from "lucide-react";
+import { Clock, CheckCircle2, PlayCircle, PauseCircle, HelpCircle, ArrowRight, Folder } from "lucide-react";
 
 export interface TaskItem {
   _id: string;
@@ -16,6 +16,10 @@ export interface TaskItem {
   estimatedMinutes?: number;
   totalDurationMinutes: number;
   sessionCount: number;
+  project?: {
+    _id: string;
+    name: string;
+  };
   createdAt: string;
   updatedAt: string;
 }
@@ -131,9 +135,17 @@ export default function TaskListPage() {
               <Card className="h-full hover:border-zinc-400 dark:hover:border-zinc-600 transition-all shadow-sm group-hover:shadow flex flex-col justify-between">
                 <CardHeader className="space-y-2 pb-3">
                   <div className="flex items-start justify-between gap-2">
-                    <CardTitle className="text-base font-semibold group-hover:text-primary transition-colors line-clamp-2">
-                      {task.title}
-                    </CardTitle>
+                    <div className="space-y-1">
+                      <CardTitle className="text-base font-semibold group-hover:text-primary transition-colors line-clamp-2">
+                        {task.title}
+                      </CardTitle>
+                      {task.project?.name && (
+                        <Badge variant="outline" className="text-[11px] font-normal bg-zinc-100 dark:bg-zinc-800">
+                          <Folder className="w-3 h-3 text-muted-foreground mr-1" />
+                          {task.project.name}
+                        </Badge>
+                      )}
+                    </div>
                     {renderStatusBadge(task.status)}
                   </div>
                   <CardDescription className="line-clamp-2 text-sm">

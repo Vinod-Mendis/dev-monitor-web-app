@@ -178,7 +178,6 @@ export default function TaskDetailPage({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           taskId,
-          sessionId: activeSession?._id,
           note: stopNote,
         }),
       });

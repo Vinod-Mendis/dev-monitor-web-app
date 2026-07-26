@@ -5,6 +5,7 @@ export type TaskStatus = "not_started" | "in_progress" | "paused" | "completed";
 export interface ITask extends Document {
   title: string;
   description?: string;
+  project: Types.ObjectId;
   assignedTo: Types.ObjectId;
   createdBy: Types.ObjectId;
   status: TaskStatus;
@@ -22,6 +23,12 @@ const TaskSchema = new Schema<ITask>(
     description: {
       type: String,
       default: "",
+    },
+    project: {
+      type: Schema.Types.ObjectId,
+      ref: "Project",
+      required: true,
+      index: true,
     },
     assignedTo: {
       type: Schema.Types.ObjectId,

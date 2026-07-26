@@ -2,12 +2,14 @@ import { NextResponse } from "next/server";
 import { syncCurrentUser } from "@/lib/syncUser";
 import { connectToDatabase } from "@/lib/db";
 import { TimeSession } from "@/models/TimeSession";
+import { Task } from "@/models/Task";
 
 export async function GET(req: Request) {
   try {
     const currentUser = await syncCurrentUser();
     const { searchParams } = new URL(req.url);
     const taskId = searchParams.get("taskId");
+    const projectId = searchParams.get("projectId");
     const requestedUserId = searchParams.get("userId");
 
     await connectToDatabase();
@@ -16,6 +18,9 @@ export async function GET(req: Request) {
 
     if (taskId) {
       query.task = taskId;
+    } else if (projectId) {
+      const taskIds = await Task.find({ project: projectId }).distinct("_id");
+      query.task = { $in: taskIds };
     }
 
     if (currentUser.role === "admin") {
@@ -28,7 +33,11 @@ export async function GET(req: Request) {
     }
 
     const sessions = await TimeSession.find(query)
-      .populate("task", "title description status")
+      .populate({
+        path: "task",
+        select: "title description status project",
+        populate: { path: "project", select: "name" },
+      })
       .populate("user", "name clerkId role")
       .sort({ startTime: -1 })
       .lean();

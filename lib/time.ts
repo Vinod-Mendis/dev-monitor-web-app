@@ -45,3 +45,17 @@ export function formatDateTime(dateInput: string | Date | null | undefined): str
     hour12: true,
   }).format(date);
 }
+
+/**
+ * Formats a Date object or ISO string to a localized date string (e.g. "Jul 26, 2026").
+ */
+export function formatDate(dateInput: string | Date | null | undefined): string {
+  if (!dateInput) return "N/A";
+  const date = new Date(dateInput);
+  if (isNaN(date.getTime())) return "N/A";
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(date);
+}
