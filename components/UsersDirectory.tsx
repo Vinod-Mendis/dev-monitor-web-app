@@ -6,6 +6,14 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { formatDuration } from "@/lib/time";
 import {
   Users,
@@ -17,6 +25,10 @@ import {
   Calendar,
   User as UserIcon,
   RefreshCw,
+  UserCog,
+  AlertTriangle,
+  CheckCircle2,
+  ArrowRight,
 } from "lucide-react";
 
 export interface UserDirectoryItem {
@@ -55,6 +67,13 @@ export function UsersDirectory() {
   // Filters
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [roleFilter, setRoleFilter] = useState<"all" | "admin" | "intern">("all");
+
+  // Role Change Modal state
+  const [selectedUser, setSelectedUser] = useState<UserDirectoryItem | null>(null);
+  const [newRole, setNewRole] = useState<"admin" | "intern">("intern");
+  const [isUpdatingRole, setIsUpdatingRole] = useState<boolean>(false);
+  const [updateError, setUpdateError] = useState<string | null>(null);
+  const [notification, setNotification] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -97,6 +116,53 @@ export function UsersDirectory() {
     return () => clearTimeout(timeoutId);
   }, [fetchUsers]);
 
+  // Handle open role change dialog
+  const handleOpenRoleModal = (user: UserDirectoryItem) => {
+    setSelectedUser(user);
+    setNewRole(user.role === "admin" ? "intern" : "admin");
+    setUpdateError(null);
+  };
+
+  // Submit role update
+  const handleConfirmRoleChange = async () => {
+    if (!selectedUser) return;
+
+    try {
+      setIsUpdatingRole(true);
+      setUpdateError(null);
+
+      const res = await fetch(`/api/users/${selectedUser._id}/role`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role: newRole }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Failed to update user role");
+      }
+
+      // Show notification
+      setNotification({
+        message: `Successfully changed ${selectedUser.name}'s role to ${newRole === "admin" ? "Admin" : "Intern"}.`,
+        type: "success",
+      });
+
+      // Update state locally & refresh
+      setSelectedUser(null);
+      await fetchUsers();
+
+      // Clear notification after 4s
+      setTimeout(() => {
+        setNotification(null);
+      }, 4000);
+    } catch (err: any) {
+      setUpdateError(err.message || "An error occurred while updating the role.");
+    } finally {
+      setIsUpdatingRole(false);
+    }
+  };
+
   const currentlyWorkingCount = users.filter((u) => u.isCurrentlyWorking).length;
 
   const renderRoleTag = (role: "admin" | "intern") => {
@@ -128,6 +194,32 @@ export function UsersDirectory() {
 
   return (
     <div className="space-y-6">
+      {/* Global Notification Banner */}
+      {notification && (
+        <div
+          className={`p-3.5 rounded-lg flex items-center justify-between text-xs font-medium border ${
+            notification.type === "success"
+              ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-800 dark:text-emerald-300"
+              : "bg-destructive/10 border-destructive/30 text-destructive"
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            {notification.type === "success" ? (
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            ) : (
+              <AlertTriangle className="w-4 h-4 text-destructive" />
+            )}
+            <span>{notification.message}</span>
+          </div>
+          <button
+            onClick={() => setNotification(null)}
+            className="text-muted-foreground hover:text-foreground cursor-pointer text-[11px]"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
       {/* Header & Stats Overview */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="p-4 flex items-center justify-between border-zinc-200 dark:border-zinc-800">
@@ -310,7 +402,18 @@ export function UsersDirectory() {
                     </div>
                   </div>
 
-                  <div>{renderRoleTag(u.role)}</div>
+                  <div className="flex flex-col items-end gap-1.5">
+                    {renderRoleTag(u.role)}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleOpenRoleModal(u)}
+                      className="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground gap-1 cursor-pointer font-medium"
+                    >
+                      <UserCog className="w-3 h-3" />
+                      Change Role
+                    </Button>
+                  </div>
                 </div>
 
                 {u.isCurrentlyWorking && u.activeTask && (
@@ -363,6 +466,118 @@ export function UsersDirectory() {
           ))}
         </div>
       )}
+
+      {/* Change Role Dialog */}
+      <Dialog open={!!selectedUser} onOpenChange={(open) => !open && setSelectedUser(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <UserCog className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              Change User Role
+            </DialogTitle>
+            <DialogDescription>
+              Update access level and workspace permissions for this user.
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedUser && (
+            <div className="space-y-4 py-2">
+              {/* User Profile summary */}
+              <div className="flex items-center gap-3 p-3 bg-zinc-50 dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800">
+                <div className="w-10 h-10 rounded-full bg-zinc-200 dark:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold text-xs flex items-center justify-center">
+                  {getInitials(selectedUser.name)}
+                </div>
+                <div>
+                  <p className="text-sm font-semibold">{selectedUser.name}</p>
+                  <p className="text-xs text-muted-foreground">{selectedUser.email || selectedUser.clerkId}</p>
+                </div>
+              </div>
+
+              {/* Role Transition Visual */}
+              <div className="flex items-center justify-between gap-3 p-3 bg-zinc-100/70 dark:bg-zinc-800/60 rounded-lg text-xs">
+                <div className="space-y-1">
+                  <span className="text-muted-foreground block text-[10px] uppercase font-bold tracking-wider">Current Role</span>
+                  {renderRoleTag(selectedUser.role)}
+                </div>
+                <ArrowRight className="w-4 h-4 text-muted-foreground" />
+                <div className="space-y-1">
+                  <span className="text-muted-foreground block text-[10px] uppercase font-bold tracking-wider">New Role</span>
+                  {renderRoleTag(newRole)}
+                </div>
+              </div>
+
+              {/* Role Selection Dropdown */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-foreground">Select Role</label>
+                <select
+                  value={newRole}
+                  onChange={(e) => setNewRole(e.target.value as "admin" | "intern")}
+                  className="w-full h-10 rounded-md border border-input bg-white dark:bg-zinc-950 px-3 text-xs shadow-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                >
+                  <option value="intern">Intern (Task execution & time tracking)</option>
+                  <option value="admin">Admin (Full administrative & monitoring access)</option>
+                </select>
+              </div>
+
+              {/* Permission Context Warning */}
+              {newRole === "admin" ? (
+                <div className="p-3 bg-purple-500/10 border border-purple-500/30 rounded-lg text-xs text-purple-900 dark:text-purple-300 space-y-1">
+                  <p className="font-semibold flex items-center gap-1.5">
+                    <ShieldCheck className="w-4 h-4 text-purple-600" />
+                    Granting Admin Privileges
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">
+                    This user will be able to create and manage projects, assign tasks to interns, monitor live sessions, and change other user roles.
+                  </p>
+                </div>
+              ) : (
+                <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-xs text-amber-900 dark:text-amber-300 space-y-1">
+                  <p className="font-semibold flex items-center gap-1.5">
+                    <AlertTriangle className="w-4 h-4 text-amber-600" />
+                    Demoting to Intern
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">
+                    This user will lose access to the Admin Command Center and will only be able to view their assigned tasks.
+                  </p>
+                </div>
+              )}
+
+              {/* Error Message */}
+              {updateError && (
+                <div className="p-3 bg-destructive/10 border border-destructive/30 rounded-lg text-xs text-destructive flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 shrink-0" />
+                  <span>{updateError}</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setSelectedUser(null)}
+              disabled={isUpdatingRole}
+              className="text-xs cursor-pointer"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleConfirmRoleChange}
+              disabled={isUpdatingRole || selectedUser?.role === newRole}
+              className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold cursor-pointer gap-1.5"
+            >
+              {isUpdatingRole ? (
+                <>
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  Updating...
+                </>
+              ) : (
+                "Confirm Role Change"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
