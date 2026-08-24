@@ -3,6 +3,7 @@ import { syncCurrentUser } from "@/lib/syncUser";
 import { connectToDatabase } from "@/lib/db";
 import { Task } from "@/models/Task";
 import { TimeSession } from "@/models/TimeSession";
+import { logActivity } from "@/lib/activityLogger";
 
 export async function POST(req: Request) {
   try {
@@ -71,6 +72,17 @@ export async function POST(req: Request) {
     if (task && task.status !== "completed") {
       task.status = "paused";
       await task.save();
+    }
+
+    // Log activity
+    if (task) {
+      await logActivity({
+        userId: currentUser._id,
+        action: "logged_session",
+        taskId: task._id,
+        projectId: task.project,
+        details: `Logged ${session.durationMinutes} min session on "${task.title}"`,
+      });
     }
 
     const populatedSession = await TimeSession.findById(session._id)

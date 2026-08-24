@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { LiveMonitoringDashboard } from "@/components/LiveMonitoringDashboard";
 import { CreateTaskForm } from "@/components/CreateTaskForm";
 import { UsersDirectory } from "@/components/UsersDirectory";
+import { ActivityFeed } from "@/components/ActivityFeed";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,7 @@ import {
   AlertCircle,
   Eye,
   AlertTriangle,
+  History,
 } from "lucide-react";
 
 interface AdminTaskItem {
@@ -67,8 +69,8 @@ interface AdminTaskItem {
 export default function AdminDashboardPage() {
   const router = useRouter();
 
-  // Active Tab state: "live" | "create" | "all_tasks" | "users"
-  const [activeTab, setActiveTab] = useState<"live" | "create" | "all_tasks" | "users">("live");
+  // Active Tab state: "live" | "activity" | "create" | "all_tasks" | "users"
+  const [activeTab, setActiveTab] = useState<"live" | "activity" | "create" | "all_tasks" | "users">("live");
 
   // User role verification
   const [checkingRole, setCheckingRole] = useState<boolean>(true);
@@ -256,6 +258,18 @@ export default function AdminDashboardPage() {
         </button>
 
         <button
+          onClick={() => setActiveTab("activity")}
+          className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition cursor-pointer whitespace-nowrap ${
+            activeTab === "activity"
+              ? "bg-zinc-900 text-white dark:bg-white dark:text-black"
+              : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+          }`}
+        >
+          <History className="w-4 h-4" />
+          Activity Feed
+        </button>
+
+        <button
           onClick={() => setActiveTab("create")}
           className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition cursor-pointer whitespace-nowrap ${
             activeTab === "create"
@@ -304,6 +318,8 @@ export default function AdminDashboardPage() {
 
       {/* Tab Content */}
       {activeTab === "live" && <LiveMonitoringDashboard showProjectFilter={true} />}
+
+      {activeTab === "activity" && <ActivityFeed />}
 
       {activeTab === "users" && <UsersDirectory />}
 

@@ -5,6 +5,7 @@ import { Task } from "@/models/Task";
 import { Project } from "@/models/Project";
 import { TimeSession } from "@/models/TimeSession";
 import { User } from "@/models/User";
+import { logActivity } from "@/lib/activityLogger";
 import { connectToDatabase } from "@/lib/db";
 import { Types } from "mongoose";
 
@@ -75,6 +76,15 @@ export async function POST(req: Request) {
       createdBy: currentAdmin._id,
       status: "not_started",
       estimatedMinutes: estimatedMinutes ? Number(estimatedMinutes) : undefined,
+    });
+
+    // Log activity
+    await logActivity({
+      userId: currentAdmin._id,
+      action: "created_task",
+      taskId: newTask._id,
+      projectId: projectDoc._id,
+      details: `Created task "${newTask.title}" assigned to ${assignedUser.name || "intern"}`,
     });
 
     const populatedTask = await Task.findById(newTask._id)

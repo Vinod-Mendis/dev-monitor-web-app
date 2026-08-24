@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/roles";
 import { connectToDatabase } from "@/lib/db";
 import { Task } from "@/models/Task";
 import { TimeSession } from "@/models/TimeSession";
+import { logActivity } from "@/lib/activityLogger";
 
 export async function POST(
   req: Request,
@@ -63,6 +64,19 @@ export async function POST(
         await activeSession.save();
       }
     }
+
+    // Log activity
+    await logActivity({
+      userId: currentAdmin._id,
+      action: status === "completed" ? "completed_task" : "requested_changes",
+      taskId: task._id,
+      projectId: task.project,
+      details:
+        status === "completed"
+          ? `Approved and completed "${task.title}"`
+          : `Requested changes on "${task.title}"${reviewNote ? `: "${reviewNote}"` : ""}`,
+      metadata: { reviewNote: reviewNote || "" },
+    });
 
     const populatedTask = await Task.findById(task._id)
       .populate("project", "name status deadline")

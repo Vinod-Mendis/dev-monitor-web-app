@@ -3,6 +3,7 @@ import { syncCurrentUser } from "@/lib/syncUser";
 import { connectToDatabase } from "@/lib/db";
 import { Task } from "@/models/Task";
 import { TimeSession } from "@/models/TimeSession";
+import { logActivity } from "@/lib/activityLogger";
 
 export async function POST(
   req: Request,
@@ -60,6 +61,15 @@ export async function POST(
       }
       await activeSession.save();
     }
+
+    // Log activity
+    await logActivity({
+      userId: currentUser._id,
+      action: "submitted_for_review",
+      taskId: task._id,
+      projectId: task.project,
+      details: `Submitted "${task.title}" for review`,
+    });
 
     const populatedTask = await Task.findById(task._id)
       .populate("project", "name status deadline")

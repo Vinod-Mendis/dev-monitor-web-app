@@ -3,6 +3,7 @@ import { syncCurrentUser } from "@/lib/syncUser";
 import { connectToDatabase } from "@/lib/db";
 import { Task } from "@/models/Task";
 import { TimeSession } from "@/models/TimeSession";
+import { logActivity } from "@/lib/activityLogger";
 
 export async function POST(req: Request) {
   try {
@@ -84,6 +85,15 @@ export async function POST(req: Request) {
     // Update task status to in_progress
     task.status = "in_progress";
     await task.save();
+
+    // Log activity
+    await logActivity({
+      userId: currentUser._id,
+      action: "started_task",
+      taskId: task._id,
+      projectId: task.project,
+      details: `Started work on "${task.title}"`,
+    });
 
     const populatedSession = await TimeSession.findById(newSession._id)
       .populate("task", "title description status")
