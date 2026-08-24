@@ -41,5 +41,13 @@ const UserSchema = new Schema<IUser>(
   }
 );
 
+if (mongoose.models.User) {
+  try {
+    delete (mongoose.models as any).User;
+  } catch {
+    // Ignore
+  }
+}
+
 export const User: Model<IUser> =
   mongoose.models.User || mongoose.model<IUser>("User", UserSchema);

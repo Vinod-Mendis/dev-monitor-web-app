@@ -22,23 +22,29 @@ export async function POST(
       );
     }
 
-    // Authorization: Only Admin can directly complete tasks
-    if (currentUser.role !== "admin") {
+    // Authorization: User must be the assigned intern or an admin
+    const isAssignedUser = task.assignedTo.toString() === currentUser._id.toString();
+    const isAdmin = currentUser.role === "admin";
+
+    if (!isAssignedUser && !isAdmin) {
       return NextResponse.json(
-        {
-          success: false,
-          error:
-            "Forbidden: Interns cannot mark tasks as completed directly. Please use 'Submit for Review'.",
-        },
+        { success: false, error: "Forbidden: You are not assigned to this task" },
         { status: 403 }
       );
     }
 
-    // Update task status to completed
-    task.status = "completed";
+    if (task.status === "completed") {
+      return NextResponse.json(
+        { success: false, error: "Task is already marked as completed." },
+        { status: 400 }
+      );
+    }
+
+    // Update task status to under_review
+    task.status = "under_review";
     await task.save();
 
-    // If an active session exists for this task, stop it automatically
+    // If an active session exists for this task, automatically stop and log it
     const activeSession = await TimeSession.findOne({
       task: task._id,
       endTime: null,
@@ -50,15 +56,20 @@ export async function POST(
       const diffMs = now.getTime() - activeSession.startTime.getTime();
       activeSession.durationMinutes = Math.max(1, Math.round(diffMs / (1000 * 60)));
       if (!activeSession.note) {
-        activeSession.note = "Auto-stopped on task completion";
+        activeSession.note = "Auto-stopped on submitting for review";
       }
       await activeSession.save();
     }
 
+    const populatedTask = await Task.findById(task._id)
+      .populate("project", "name status deadline")
+      .populate("assignedTo", "name clerkId role")
+      .populate("createdBy", "name clerkId role");
+
     return NextResponse.json({
       success: true,
-      message: "Task marked as completed",
-      task,
+      message: "Task successfully submitted for review",
+      task: populatedTask,
     });
   } catch (error: any) {
     const status = error.message?.startsWith("Unauthorized") ? 401 : 500;

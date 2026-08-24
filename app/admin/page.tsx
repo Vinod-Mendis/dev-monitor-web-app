@@ -27,16 +27,24 @@ import {
   ShieldAlert,
   Folder,
   AlertCircle,
+  Eye,
 } from "lucide-react";
 
 interface AdminTaskItem {
   _id: string;
   title: string;
   description: string;
-  status: "not_started" | "in_progress" | "paused" | "completed";
+  status:
+    | "not_started"
+    | "in_progress"
+    | "paused"
+    | "under_review"
+    | "fixes_needed"
+    | "completed";
   estimatedMinutes?: number;
   totalDurationMinutes: number;
   sessionCount: number;
+  reviewNote?: string;
   project?: {
     _id: string;
     name: string;
@@ -158,26 +166,38 @@ export default function AdminDashboardPage() {
     switch (status) {
       case "in_progress":
         return (
-          <Badge className="bg-blue-500/20 text-blue-700 dark:text-blue-300 border-blue-500/30 gap-1">
+          <Badge className="bg-blue-500/20 text-blue-700 dark:text-blue-300 border-blue-500/30 gap-1 font-semibold text-xs">
             <PlayCircle className="w-3 h-3" /> In Progress
           </Badge>
         );
       case "paused":
         return (
-          <Badge className="bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/30 gap-1">
+          <Badge className="bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/30 gap-1 font-semibold text-xs">
             <PauseCircle className="w-3 h-3" /> Paused
+          </Badge>
+        );
+      case "under_review":
+        return (
+          <Badge className="bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-500/30 gap-1 font-semibold text-xs">
+            <Eye className="w-3 h-3 text-purple-600" /> Under Review
+          </Badge>
+        );
+      case "fixes_needed":
+        return (
+          <Badge className="bg-orange-500/20 text-orange-800 dark:text-orange-300 border-orange-500/30 gap-1 font-semibold text-xs">
+            <AlertTriangle className="w-3 h-3 text-orange-600" /> Fixes Needed
           </Badge>
         );
       case "completed":
         return (
-          <Badge className="bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 gap-1">
+          <Badge className="bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 gap-1 font-semibold text-xs">
             <CheckCircle2 className="w-3 h-3" /> Completed
           </Badge>
         );
       case "not_started":
       default:
         return (
-          <Badge variant="outline" className="gap-1">
+          <Badge variant="outline" className="gap-1 text-xs">
             <HelpCircle className="w-3 h-3" /> Not Started
           </Badge>
         );
@@ -191,6 +211,7 @@ export default function AdminDashboardPage() {
   });
 
   const staleCount = tasks.filter((t) => t.isStale).length;
+  const underReviewCount = tasks.filter((t) => t.status === "under_review").length;
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
@@ -202,12 +223,12 @@ export default function AdminDashboardPage() {
             Admin Command Center
           </h1>
           <p className="text-sm text-muted-foreground">
-            Monitor intern activity live, assign tasks, manage projects, and oversee team performance.
+            Monitor intern activity live, review submitted work, assign tasks, manage projects, and oversee team performance.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <Link href="/admin/projects">
+          <Link href="/projects">
             <Button className="bg-blue-600 hover:bg-blue-700 text-white gap-2 cursor-pointer text-xs font-semibold">
               <Folder className="w-4 h-4" />
               Manage Projects
@@ -255,6 +276,11 @@ export default function AdminDashboardPage() {
         >
           <ListTodo className="w-4 h-4" />
           All Tasks ({tasks.length})
+          {underReviewCount > 0 && (
+            <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-purple-600 text-white font-bold animate-pulse">
+              {underReviewCount} for review
+            </span>
+          )}
           {staleCount > 0 && (
             <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-amber-500 text-white font-bold">
               {staleCount} stale
@@ -302,6 +328,8 @@ export default function AdminDashboardPage() {
                 className="h-8 rounded-md border border-input bg-white dark:bg-zinc-900 px-2.5 text-xs shadow-xs"
               >
                 <option value="all">All Statuses</option>
+                <option value="under_review">Under Review ({underReviewCount})</option>
+                <option value="fixes_needed">Fixes Needed</option>
                 <option value="not_started">Not Started</option>
                 <option value="in_progress">In Progress</option>
                 <option value="paused">Paused</option>

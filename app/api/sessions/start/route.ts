@@ -37,6 +37,24 @@ export async function POST(req: Request) {
       );
     }
 
+    // Status Check: cannot start timer if task is completed or under review
+    if (task.status === "completed") {
+      return NextResponse.json(
+        { success: false, error: "This task is completed and cannot be started." },
+        { status: 400 }
+      );
+    }
+
+    if (task.status === "under_review") {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "This task is currently submitted and under review by your admin.",
+        },
+        { status: 400 }
+      );
+    }
+
     // Single Active Session Check: User can only have ONE active TimeSession (endTime: null) at a time
     const activeSession = await TimeSession.findOne({
       user: currentUser._id,

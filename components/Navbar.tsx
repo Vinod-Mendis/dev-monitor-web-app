@@ -46,7 +46,7 @@ export function Navbar() {
             <Link
               href="/tasks"
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md transition ${
-                pathname === "/tasks" || (pathname.startsWith("/tasks/") && !pathname.startsWith("/admin/projects"))
+                pathname === "/tasks" || (pathname.startsWith("/tasks/") && !pathname.startsWith("/projects"))
                   ? "bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100 font-semibold"
                   : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
               }`}
@@ -55,32 +55,30 @@ export function Navbar() {
               My Tasks
             </Link>
 
-            {isAdmin && (
-              <>
-                <Link
-                  href="/admin/projects"
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md transition ${
-                    pathname.startsWith("/admin/projects")
-                      ? "bg-blue-500/10 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300 font-semibold border border-blue-500/30"
-                      : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
-                  }`}
-                >
-                  <Folder className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                  Projects
-                </Link>
+            <Link
+              href="/projects"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md transition ${
+                pathname.startsWith("/projects") || pathname.startsWith("/admin/projects")
+                  ? "bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100 font-semibold"
+                  : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+              }`}
+            >
+              <Folder className="w-4 h-4" />
+              Projects
+            </Link>
 
-                <Link
-                  href="/admin"
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md transition ${
-                    pathname === "/admin"
-                      ? "bg-blue-500/10 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300 font-semibold border border-blue-500/30"
-                      : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
-                  }`}
-                >
-                  <LayoutDashboard className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                  Admin Dashboard
-                </Link>
-              </>
+            {isAdmin && (
+              <Link
+                href="/admin"
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md transition ${
+                  pathname === "/admin"
+                    ? "bg-blue-500/10 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300 font-semibold border border-blue-500/30"
+                    : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+                }`}
+              >
+                <LayoutDashboard className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                Admin Dashboard
+              </Link>
             )}
           </nav>
         </Show>
