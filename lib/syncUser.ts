@@ -25,16 +25,21 @@ export async function syncCurrentUser(): Promise<IUser> {
         clerkUser.emailAddresses[0]?.emailAddress ||
         "User";
 
+  const email = clerkUser.emailAddresses?.[0]?.emailAddress || "";
+  const imageUrl = clerkUser.imageUrl || "";
+
   let dbUser = await User.findOne({ clerkId: clerkUser.id });
 
   if (!dbUser) {
     dbUser = await User.create({
       clerkId: clerkUser.id,
       name: fullName,
+      email: email,
+      imageUrl: imageUrl,
       role: role,
     });
   } else {
-    // Update name or role if they changed
+    // Update name, email, imageUrl, or role if they changed
     let hasChanges = false;
     if (dbUser.role !== role) {
       dbUser.role = role;
@@ -42,6 +47,14 @@ export async function syncCurrentUser(): Promise<IUser> {
     }
     if (dbUser.name !== fullName && fullName !== "User") {
       dbUser.name = fullName;
+      hasChanges = true;
+    }
+    if (email && dbUser.email !== email) {
+      dbUser.email = email;
+      hasChanges = true;
+    }
+    if (imageUrl && dbUser.imageUrl !== imageUrl) {
+      dbUser.imageUrl = imageUrl;
       hasChanges = true;
     }
     if (hasChanges) {

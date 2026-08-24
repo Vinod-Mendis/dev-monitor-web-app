@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LiveMonitoringDashboard } from "@/components/LiveMonitoringDashboard";
 import { CreateTaskForm } from "@/components/CreateTaskForm";
+import { UsersDirectory } from "@/components/UsersDirectory";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ import {
   Activity,
   ListTodo,
   User,
+  Users,
   Clock,
   CheckCircle2,
   PlayCircle,
@@ -56,8 +58,8 @@ interface AdminTaskItem {
 export default function AdminDashboardPage() {
   const router = useRouter();
 
-  // Active Tab state: "live" | "create" | "all_tasks"
-  const [activeTab, setActiveTab] = useState<"live" | "create" | "all_tasks">("live");
+  // Active Tab state: "live" | "create" | "all_tasks" | "users"
+  const [activeTab, setActiveTab] = useState<"live" | "create" | "all_tasks" | "users">("live");
 
   // User role verification
   const [checkingRole, setCheckingRole] = useState<boolean>(true);
@@ -259,10 +261,24 @@ export default function AdminDashboardPage() {
             </span>
           )}
         </button>
+
+        <button
+          onClick={() => setActiveTab("users")}
+          className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition cursor-pointer ${
+            activeTab === "users"
+              ? "bg-zinc-900 text-white dark:bg-white dark:text-black"
+              : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+          }`}
+        >
+          <Users className="w-4 h-4" />
+          Team Members
+        </button>
       </div>
 
       {/* Tab Content */}
       {activeTab === "live" && <LiveMonitoringDashboard showProjectFilter={true} />}
+
+      {activeTab === "users" && <UsersDirectory />}
 
       {activeTab === "create" && (
         <div className="max-w-2xl mx-auto">
