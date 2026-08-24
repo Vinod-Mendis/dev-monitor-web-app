@@ -28,6 +28,7 @@ import {
   Folder,
   AlertCircle,
   Eye,
+  AlertTriangle,
 } from "lucide-react";
 
 interface AdminTaskItem {
@@ -214,7 +215,7 @@ export default function AdminDashboardPage() {
   const underReviewCount = tasks.filter((t) => t.status === "under_review").length;
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
+    <div className="w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-4">
         <div>
@@ -241,10 +242,10 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex items-center gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-2">
+      <div className="flex items-center gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-2 overflow-x-auto">
         <button
           onClick={() => setActiveTab("live")}
-          className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition cursor-pointer ${
+          className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition cursor-pointer whitespace-nowrap ${
             activeTab === "live"
               ? "bg-zinc-900 text-white dark:bg-white dark:text-black"
               : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800"
@@ -256,7 +257,7 @@ export default function AdminDashboardPage() {
 
         <button
           onClick={() => setActiveTab("create")}
-          className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition cursor-pointer ${
+          className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition cursor-pointer whitespace-nowrap ${
             activeTab === "create"
               ? "bg-zinc-900 text-white dark:bg-white dark:text-black"
               : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800"
@@ -268,7 +269,7 @@ export default function AdminDashboardPage() {
 
         <button
           onClick={() => setActiveTab("all_tasks")}
-          className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition cursor-pointer ${
+          className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition cursor-pointer whitespace-nowrap ${
             activeTab === "all_tasks"
               ? "bg-zinc-900 text-white dark:bg-white dark:text-black"
               : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800"
@@ -278,7 +279,7 @@ export default function AdminDashboardPage() {
           All Tasks ({tasks.length})
           {underReviewCount > 0 && (
             <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-purple-600 text-white font-bold animate-pulse">
-              {underReviewCount} for review
+              {underReviewCount} review
             </span>
           )}
           {staleCount > 0 && (
@@ -290,7 +291,7 @@ export default function AdminDashboardPage() {
 
         <button
           onClick={() => setActiveTab("users")}
-          className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition cursor-pointer ${
+          className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition cursor-pointer whitespace-nowrap ${
             activeTab === "users"
               ? "bg-zinc-900 text-white dark:bg-white dark:text-black"
               : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800"
@@ -317,7 +318,7 @@ export default function AdminDashboardPage() {
       )}
 
       {activeTab === "all_tasks" && (
-        <div className="space-y-4">
+        <div className="space-y-4 w-full">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <h2 className="text-lg font-bold">Team Tasks Overview</h2>
             <div className="flex items-center gap-2">
@@ -325,7 +326,7 @@ export default function AdminDashboardPage() {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="h-8 rounded-md border border-input bg-white dark:bg-zinc-900 px-2.5 text-xs shadow-xs"
+                className="h-8 rounded-md border border-input bg-white dark:bg-zinc-900 px-2.5 text-xs shadow-xs focus:outline-none focus:ring-1 focus:ring-primary"
               >
                 <option value="all">All Statuses</option>
                 <option value="under_review">Under Review ({underReviewCount})</option>
@@ -346,85 +347,139 @@ export default function AdminDashboardPage() {
           )}
 
           {loadingTasks ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {[1, 2, 3, 4].map((i) => (
-                <Card key={i} className="p-6 space-y-4">
-                  <Skeleton className="h-6 w-3/4" />
-                  <Skeleton className="h-4 w-full" />
-                </Card>
+            <div className="w-full space-y-3">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="p-4 bg-white dark:bg-zinc-900 border rounded-xl flex items-center justify-between">
+                  <Skeleton className="h-5 w-1/3" />
+                  <Skeleton className="h-5 w-24" />
+                  <Skeleton className="h-5 w-20" />
+                </div>
               ))}
             </div>
           ) : filteredTasks.length === 0 ? (
-            <Card className="p-8 text-center text-sm text-muted-foreground">
+            <Card className="p-8 text-center text-sm text-muted-foreground w-full">
               No tasks found matching filter criteria.
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {filteredTasks.map((t) => (
-                <Link key={t._id} href={`/tasks/${t._id}`} className="group block focus:outline-none">
-                  <Card
-                    className={`h-full hover:border-zinc-400 dark:hover:border-zinc-600 transition-all shadow-sm flex flex-col justify-between ${
-                      t.isStale ? "border-amber-500/40 bg-amber-500/[0.02]" : ""
-                    }`}
-                  >
-                    <CardHeader className="space-y-2 pb-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="space-y-1">
-                          <CardTitle className="text-base font-semibold group-hover:text-primary transition-colors line-clamp-2">
-                            {t.title}
-                          </CardTitle>
-                          {t.project?.name && (
-                            <Badge variant="outline" className="text-[10px] font-normal bg-zinc-100 dark:bg-zinc-800">
-                              <Folder className="w-3 h-3 text-muted-foreground mr-1" />
-                              {t.project.name}
-                            </Badge>
-                          )}
-                          {t.isStale && (
-                            <Badge variant="outline" className="ml-1 bg-amber-500/15 text-amber-900 dark:text-amber-200 border-amber-500/40 text-[10px] gap-1 font-bold">
-                              <AlertCircle className="w-3 h-3 text-amber-600" />
-                              Stale ({t.daysInactive}d inactive)
-                            </Badge>
-                          )}
-                        </div>
-                        {renderStatusBadge(t.status)}
-                      </div>
-                      <CardDescription className="line-clamp-2 text-xs">
-                        {t.description || "No description provided."}
-                      </CardDescription>
-                    </CardHeader>
+            <div className="w-full overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs">
+              <div className="overflow-x-auto w-full">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-zinc-50 dark:bg-zinc-800/60 border-b border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 uppercase text-[11px] font-semibold tracking-wider">
+                    <tr>
+                      <th className="px-5 py-3.5">Task</th>
+                      <th className="px-4 py-3.5">Project</th>
+                      <th className="px-4 py-3.5">Assigned Intern</th>
+                      <th className="px-4 py-3.5">Status</th>
+                      <th className="px-4 py-3.5">Time Logged</th>
+                      <th className="px-4 py-3.5">Sessions</th>
+                      <th className="px-5 py-3.5 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
+                    {filteredTasks.map((t) => (
+                      <tr
+                        key={t._id}
+                        className={`hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 transition-colors group cursor-pointer ${
+                          t.isStale ? "bg-amber-500/[0.02]" : ""
+                        }`}
+                        onClick={() => router.push(`/tasks/${t._id}`)}
+                      >
+                        {/* Task Title & Description */}
+                        <td className="px-5 py-4 align-top">
+                          <div className="space-y-1 max-w-sm">
+                            <Link
+                              href={`/tasks/${t._id}`}
+                              className="font-semibold text-sm text-foreground group-hover:text-primary transition-colors hover:underline block leading-snug"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {t.title}
+                            </Link>
+                            {t.description && (
+                              <p className="text-xs text-muted-foreground line-clamp-1">{t.description}</p>
+                            )}
+                            {t.isStale && (
+                              <Badge
+                                variant="outline"
+                                className="bg-amber-500/15 text-amber-900 dark:text-amber-200 border-amber-500/40 text-[10px] gap-1 font-bold mt-1"
+                              >
+                                <AlertCircle className="w-3 h-3 text-amber-600" />
+                                Stale ({t.daysInactive}d inactive)
+                              </Badge>
+                            )}
+                          </div>
+                        </td>
 
-                    <CardContent className="pt-0 space-y-3">
-                      <div className="flex items-center gap-2 text-xs bg-zinc-100 dark:bg-zinc-800/60 p-2 rounded-md">
-                        <User className="w-3.5 h-3.5 text-muted-foreground" />
-                        <span className="text-muted-foreground">Assigned to:</span>
-                        <span className="font-semibold text-zinc-900 dark:text-zinc-100">
-                          {t.assignedTo?.name || t.assignedTo?.clerkId || "Unassigned"}
-                        </span>
-                      </div>
+                        {/* Project */}
+                        <td className="px-4 py-4 align-top whitespace-nowrap">
+                          {t.project?.name ? (
+                            <Link
+                              href={`/projects/${t.project._id}`}
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Folder className="w-3 h-3 text-muted-foreground shrink-0" />
+                              <span className="truncate max-w-[130px]">{t.project.name}</span>
+                            </Link>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </td>
 
-                      <div className="flex items-center justify-between text-xs text-muted-foreground border-t pt-2.5">
-                        <div className="flex items-center gap-1.5 font-medium text-foreground">
-                          <Clock className="w-3.5 h-3.5 text-muted-foreground" />
-                          <span>Time:</span>
-                          <span className="font-bold text-zinc-900 dark:text-zinc-100">
-                            {formatDuration(t.totalDurationMinutes)}
-                          </span>
-                          {t.estimatedMinutes && (
-                            <span className="text-muted-foreground text-[11px]">
-                              / est. {formatDuration(t.estimatedMinutes)}
+                        {/* Assigned Intern */}
+                        <td className="px-4 py-4 align-top whitespace-nowrap">
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-full bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center font-bold text-[10px] text-foreground">
+                              {(t.assignedTo?.name || "U")[0].toUpperCase()}
+                            </div>
+                            <span className="font-medium text-xs text-foreground">
+                              {t.assignedTo?.name || t.assignedTo?.clerkId || "Unassigned"}
                             </span>
-                          )}
-                        </div>
+                          </div>
+                        </td>
 
-                        <div className="flex items-center gap-1 text-xs group-hover:text-foreground transition-colors">
-                          <span>Details</span>
-                          <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
+                        {/* Status */}
+                        <td className="px-4 py-4 align-top whitespace-nowrap">
+                          {renderStatusBadge(t.status)}
+                        </td>
+
+                        {/* Time Logged */}
+                        <td className="px-4 py-4 align-top whitespace-nowrap">
+                          <div className="space-y-0.5">
+                            <span className="font-semibold text-xs text-foreground flex items-center gap-1">
+                              <Clock className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                              {formatDuration(t.totalDurationMinutes)}
+                            </span>
+                            {t.estimatedMinutes ? (
+                              <span className="text-muted-foreground text-[11px] block">
+                                / est. {formatDuration(t.estimatedMinutes)}
+                              </span>
+                            ) : null}
+                          </div>
+                        </td>
+
+                        {/* Sessions */}
+                        <td className="px-4 py-4 align-top whitespace-nowrap text-xs text-muted-foreground font-medium">
+                          {t.sessionCount || 0} sessions
+                        </td>
+
+                        {/* Action */}
+                        <td className="px-5 py-4 align-top whitespace-nowrap text-right">
+                          <Link href={`/tasks/${t._id}`} onClick={(e) => e.stopPropagation()}>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-8 text-xs font-semibold gap-1.5 hover:bg-primary hover:text-primary-foreground cursor-pointer"
+                            >
+                              <span>{t.status === "under_review" ? "Review" : "Details"}</span>
+                              <ArrowRight className="w-3.5 h-3.5" />
+                            </Button>
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </div>

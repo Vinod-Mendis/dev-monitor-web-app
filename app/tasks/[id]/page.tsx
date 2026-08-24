@@ -362,7 +362,7 @@ export default function TaskDetailPage({
   const isCompleted = task.status === "completed";
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
+    <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
       {/* Back button */}
       <div>
         <Link

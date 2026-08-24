@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useCallback, use } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ProjectFormDialog } from "@/components/ProjectFormDialog";
 import { LiveMonitoringDashboard } from "@/components/LiveMonitoringDashboard";
 import { CreateTaskForm } from "@/components/CreateTaskForm";
@@ -84,6 +85,7 @@ export default function ProjectDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id: projectId } = use(params);
+  const router = useRouter();
 
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [project, setProject] = useState<ProjectDetailData | null>(null);
@@ -232,20 +234,14 @@ export default function ProjectDetailPage({
   };
 
   const renderPaceSignalBadge = () => {
-    switch (paceSignal) {
-      case "overdue":
-        return (
-          <Badge className="bg-destructive/15 text-destructive border-destructive/30 gap-1 font-bold text-xs">
-            <AlertTriangle className="w-3.5 h-3.5" /> Overdue
-          </Badge>
-        );
-      case "due_soon":
+    switch (paceSignal.label) {
+      case "Behind Pace":
         return (
           <Badge className="bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-500/30 gap-1 font-bold text-xs">
-            <Clock className="w-3.5 h-3.5 text-amber-600" /> Due Soon
+            <AlertTriangle className="w-3.5 h-3.5 text-amber-600" /> Behind Pace
           </Badge>
         );
-      case "healthy":
+      case "On Track":
         return (
           <Badge className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20 text-xs">
             On Track
@@ -257,112 +253,88 @@ export default function ProjectDetailPage({
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
-      {/* Back link */}
-      <div>
-        <Link
-          href="/projects"
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Projects Directory
-        </Link>
+    <div className="w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      {/* Back Link & Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-4">
+        <div className="space-y-1">
+          <Link
+            href="/projects"
+            className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground mb-1 font-medium transition"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            Back to Projects
+          </Link>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold tracking-tight">{project.name}</h1>
+            <Badge
+              variant={project.status === "active" ? "default" : "secondary"}
+              className="text-xs capitalize"
+            >
+              {project.status}
+            </Badge>
+            {renderPaceSignalBadge()}
+          </div>
+        </div>
+
+        {/* Admin Controls */}
+        {isAdmin && (
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsEditDialogOpen(true)}
+              className="gap-1.5 cursor-pointer text-xs"
+            >
+              <Edit className="w-3.5 h-3.5" />
+              Edit Project
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => setIsCreateTaskOpen(true)}
+              className="gap-1.5 cursor-pointer text-xs bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              <PlusCircle className="w-3.5 h-3.5" />
+              Add Task
+            </Button>
+          </div>
+        )}
       </div>
 
-      {/* Project Overview Card */}
-      <Card className="shadow-xs">
-        <CardHeader className="space-y-3 border-b pb-5">
-          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-            <div className="space-y-1.5">
-              <div className="flex items-center gap-2 flex-wrap">
-                <CardTitle className="text-2xl font-bold tracking-tight">
-                  {project.name}
-                </CardTitle>
-                <Badge
-                  variant={project.status === "active" ? "default" : "secondary"}
-                  className="capitalize font-semibold text-xs"
-                >
-                  {project.status}
-                </Badge>
-                {renderPaceSignalBadge()}
-              </div>
+      {/* Project Metadata Card */}
+      <Card className="shadow-xs w-full">
+        <CardContent className="p-4 sm:p-6 space-y-4">
+          {project.description && (
+            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+              {project.description}
+            </p>
+          )}
 
-              <CardDescription className="text-sm whitespace-pre-line leading-relaxed max-w-3xl">
-                {project.description || "No description provided."}
-              </CardDescription>
-            </div>
-
-            {isAdmin && (
-              <div className="flex items-center gap-2 shrink-0">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsEditDialogOpen(true)}
-                  className="gap-1.5 cursor-pointer text-xs font-semibold"
-                >
-                  <Edit className="w-3.5 h-3.5" />
-                  Edit Project
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={() => setIsCreateTaskOpen(true)}
-                  className="gap-1.5 bg-blue-600 hover:bg-blue-700 text-white cursor-pointer text-xs font-semibold"
-                >
-                  <PlusCircle className="w-3.5 h-3.5" />
-                  Add Task
-                </Button>
-              </div>
-            )}
-          </div>
-        </CardHeader>
-
-        <CardContent className="py-4 space-y-4">
-          {/* Progress Overview Bar */}
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
-              <span>{isAdmin ? "Project Tasks Progress" : "My Assigned Tasks Progress"}</span>
-              <span className="font-bold text-foreground">
-                {project.completedTasks} of {project.totalTasks} completed ({completionPercent}%)
+          {/* Quick Metrics Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-zinc-50 dark:bg-zinc-900/60 p-4 rounded-lg border border-zinc-200 dark:border-zinc-800 text-xs">
+            <div>
+              <span className="text-[10px] text-muted-foreground font-medium block">Deadline</span>
+              <span className="font-semibold text-sm flex items-center gap-1.5 mt-0.5">
+                <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+                {project.deadline ? formatDate(project.deadline) : "No deadline"}
               </span>
             </div>
-            <div className="w-full h-2 rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
-              <div
-                className="h-full bg-blue-600 rounded-full transition-all duration-300"
-                style={{ width: `${completionPercent}%` }}
-              />
-            </div>
-          </div>
 
-          {/* Metric Badges */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-zinc-50 dark:bg-zinc-900/60 p-3 rounded-lg text-xs border border-zinc-100 dark:border-zinc-800">
             <div>
               <span className="text-[10px] text-muted-foreground font-medium block">
                 Total Time Logged
               </span>
-              <span className="font-bold text-sm text-foreground flex items-center gap-1 mt-0.5">
-                <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+              <span className="font-semibold text-sm flex items-center gap-1.5 mt-0.5">
+                <Clock className="w-3.5 h-3.5 text-primary" />
                 {formatDuration(project.totalDurationMinutes)}
               </span>
             </div>
 
             <div>
               <span className="text-[10px] text-muted-foreground font-medium block">
-                Estimated Time
+                Task Completion
               </span>
-              <span className="font-semibold text-sm text-foreground block mt-0.5">
-                {project.estimatedMinutes > 0
-                  ? formatDuration(project.estimatedMinutes)
-                  : "None specified"}
-              </span>
-            </div>
-
-            <div>
-              <span className="text-[10px] text-muted-foreground font-medium block">
-                Deadline
-              </span>
-              <span className="font-semibold text-sm text-foreground flex items-center gap-1 mt-0.5">
-                <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
-                {formatDate(project.deadline)}
+              <span className="font-bold text-sm text-foreground block mt-0.5">
+                {project.completedTasks} / {project.totalTasks} ({completionPercent}%)
               </span>
             </div>
 
@@ -424,7 +396,7 @@ export default function ProjectDetailPage({
 
       {/* Task List / Content */}
       {(activeTab === "tasks" || !isAdmin) && (
-        <div className="space-y-4">
+        <div className="space-y-4 w-full">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               {isAdmin ? "All Project Tasks" : "Select a task to open timer and log work"}
@@ -435,7 +407,7 @@ export default function ProjectDetailPage({
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="h-8 rounded-md border border-input bg-white dark:bg-zinc-900 px-2.5 text-xs shadow-xs"
+                className="h-8 rounded-md border border-input bg-white dark:bg-zinc-900 px-2.5 text-xs shadow-xs focus:outline-none focus:ring-1 focus:ring-primary"
               >
                 <option value="all">All Statuses</option>
                 <option value="not_started">Not Started</option>
@@ -450,7 +422,7 @@ export default function ProjectDetailPage({
           </div>
 
           {filteredTasks.length === 0 ? (
-            <Card className="p-8 text-center text-sm text-muted-foreground space-y-2">
+            <Card className="p-8 text-center text-sm text-muted-foreground space-y-2 w-full">
               <p className="font-semibold text-foreground">No tasks found</p>
               <p className="text-xs">
                 {isAdmin
@@ -459,72 +431,110 @@ export default function ProjectDetailPage({
               </p>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {filteredTasks.map((t) => (
-                <Link key={t._id} href={`/tasks/${t._id}`} className="group block focus:outline-none">
-                  <Card
-                    className={`h-full hover:border-zinc-400 dark:hover:border-zinc-600 transition-all shadow-xs flex flex-col justify-between ${
-                      t.isStale ? "border-amber-500/40 bg-amber-500/[0.02]" : ""
-                    }`}
-                  >
-                    <CardHeader className="space-y-2 pb-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="space-y-1">
-                          <CardTitle className="text-base font-semibold group-hover:text-primary transition-colors line-clamp-2">
-                            {t.title}
-                          </CardTitle>
-                          {t.isStale && (
-                            <Badge
-                              variant="outline"
-                              className="bg-amber-500/15 text-amber-900 dark:text-amber-200 border-amber-500/40 text-[10px] gap-1 font-bold"
+            <div className="w-full overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs">
+              <div className="overflow-x-auto w-full">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-zinc-50 dark:bg-zinc-800/60 border-b border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 uppercase text-[11px] font-semibold tracking-wider">
+                    <tr>
+                      <th className="px-5 py-3.5">Task</th>
+                      {isAdmin && <th className="px-4 py-3.5">Assigned To</th>}
+                      <th className="px-4 py-3.5">Status</th>
+                      <th className="px-4 py-3.5">Time Logged</th>
+                      <th className="px-4 py-3.5">Sessions</th>
+                      <th className="px-5 py-3.5 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
+                    {filteredTasks.map((t) => (
+                      <tr
+                        key={t._id}
+                        className={`hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 transition-colors group cursor-pointer ${
+                          t.isStale ? "bg-amber-500/[0.02]" : ""
+                        }`}
+                        onClick={() => router.push(`/tasks/${t._id}`)}
+                      >
+                        {/* Task Title & Description */}
+                        <td className="px-5 py-4 align-top">
+                          <div className="space-y-1 max-w-sm">
+                            <Link
+                              href={`/tasks/${t._id}`}
+                              className="font-semibold text-sm text-foreground group-hover:text-primary transition-colors hover:underline block leading-snug"
+                              onClick={(e) => e.stopPropagation()}
                             >
-                              <AlertCircle className="w-3 h-3 text-amber-600" />
-                              Stale ({t.daysInactive}d inactive)
-                            </Badge>
-                          )}
-                        </div>
-                        {renderStatusBadge(t.status)}
-                      </div>
+                              {t.title}
+                            </Link>
+                            {t.description && (
+                              <p className="text-xs text-muted-foreground line-clamp-1">{t.description}</p>
+                            )}
+                            {t.isStale && (
+                              <Badge
+                                variant="outline"
+                                className="bg-amber-500/15 text-amber-900 dark:text-amber-200 border-amber-500/40 text-[10px] gap-1 font-bold mt-1"
+                              >
+                                <AlertCircle className="w-3 h-3 text-amber-600" />
+                                Stale ({t.daysInactive}d inactive)
+                              </Badge>
+                            )}
+                          </div>
+                        </td>
 
-                      <CardDescription className="line-clamp-2 text-xs">
-                        {t.description || "No description provided."}
-                      </CardDescription>
-                    </CardHeader>
+                        {/* Assigned To (Admin only) */}
+                        {isAdmin && (
+                          <td className="px-4 py-4 align-top whitespace-nowrap">
+                            <div className="flex items-center gap-2">
+                              <div className="w-6 h-6 rounded-full bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center font-bold text-[10px] text-foreground">
+                                {(t.assignedTo?.name || "U")[0].toUpperCase()}
+                              </div>
+                              <span className="font-medium text-xs text-foreground">
+                                {t.assignedTo?.name || t.assignedTo?.clerkId || "Unassigned"}
+                              </span>
+                            </div>
+                          </td>
+                        )}
 
-                    <CardContent className="pt-0 space-y-3">
-                      {isAdmin && t.assignedTo && (
-                        <div className="flex items-center gap-2 text-xs bg-zinc-100 dark:bg-zinc-800/60 p-2 rounded-md">
-                          <User className="w-3.5 h-3.5 text-muted-foreground" />
-                          <span className="text-muted-foreground">Assigned to:</span>
-                          <span className="font-semibold text-zinc-900 dark:text-zinc-100">
-                            {t.assignedTo.name || t.assignedTo.clerkId}
-                          </span>
-                        </div>
-                      )}
+                        {/* Status */}
+                        <td className="px-4 py-4 align-top whitespace-nowrap">
+                          {renderStatusBadge(t.status)}
+                        </td>
 
-                      <div className="flex items-center justify-between text-xs text-muted-foreground border-t pt-2.5">
-                        <div className="flex items-center gap-1.5 font-medium text-foreground">
-                          <Clock className="w-3.5 h-3.5 text-muted-foreground" />
-                          <span>Time:</span>
-                          <span className="font-bold text-zinc-900 dark:text-zinc-100">
-                            {formatDuration(t.totalDurationMinutes)}
-                          </span>
-                          {t.estimatedMinutes && (
-                            <span className="text-muted-foreground text-[11px]">
-                              / est. {formatDuration(t.estimatedMinutes)}
+                        {/* Time Logged */}
+                        <td className="px-4 py-4 align-top whitespace-nowrap">
+                          <div className="space-y-0.5">
+                            <span className="font-semibold text-xs text-foreground flex items-center gap-1">
+                              <Clock className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                              {formatDuration(t.totalDurationMinutes)}
                             </span>
-                          )}
-                        </div>
+                            {t.estimatedMinutes ? (
+                              <span className="text-muted-foreground text-[11px] block">
+                                / est. {formatDuration(t.estimatedMinutes)}
+                              </span>
+                            ) : null}
+                          </div>
+                        </td>
 
-                        <div className="flex items-center gap-1 text-xs group-hover:text-foreground transition-colors font-medium">
-                          <span>{t.status === "completed" ? "View Task" : "Work on Task"}</span>
-                          <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
+                        {/* Sessions */}
+                        <td className="px-4 py-4 align-top whitespace-nowrap text-xs text-muted-foreground font-medium">
+                          {t.sessionCount || 0} sessions
+                        </td>
+
+                        {/* Action */}
+                        <td className="px-5 py-4 align-top whitespace-nowrap text-right">
+                          <Link href={`/tasks/${t._id}`} onClick={(e) => e.stopPropagation()}>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-8 text-xs font-semibold gap-1.5 hover:bg-primary hover:text-primary-foreground cursor-pointer"
+                            >
+                              <span>{isAdmin ? (t.status === "under_review" ? "Review" : "Details") : (t.status === "completed" ? "View Task" : "Work on Task")}</span>
+                              <ArrowRight className="w-3.5 h-3.5" />
+                            </Button>
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </div>
@@ -536,7 +546,6 @@ export default function ProjectDetailPage({
           <LiveMonitoringDashboard
             projectId={projectId}
             showProjectFilter={false}
-            pollIntervalSeconds={10}
           />
         </div>
       )}
@@ -554,13 +563,22 @@ export default function ProjectDetailPage({
           {isCreateTaskOpen && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
               <div className="bg-white dark:bg-zinc-900 rounded-xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto border shadow-xl">
+                <div className="flex justify-end mb-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsCreateTaskOpen(false)}
+                    className="cursor-pointer text-xs"
+                  >
+                    Close
+                  </Button>
+                </div>
                 <CreateTaskForm
-                  initialProjectId={projectId}
+                  defaultProjectId={projectId}
                   onSuccess={() => {
                     setIsCreateTaskOpen(false);
                     fetchProjectData();
                   }}
-                  onCancel={() => setIsCreateTaskOpen(false)}
                 />
               </div>
             </div>

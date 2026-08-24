@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -45,6 +46,7 @@ export interface TaskItem {
 }
 
 export default function TaskListPage() {
+  const router = useRouter();
   const [tasks, setTasks] = useState<TaskItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -84,35 +86,35 @@ export default function TaskListPage() {
     switch (status) {
       case "in_progress":
         return (
-          <Badge variant="secondary" className="bg-blue-500/10 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300 border-blue-500/30 gap-1">
+          <Badge variant="secondary" className="bg-blue-500/10 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300 border-blue-500/30 gap-1 font-semibold text-xs">
             <PlayCircle className="w-3.5 h-3.5" />
             In Progress
           </Badge>
         );
       case "paused":
         return (
-          <Badge variant="secondary" className="bg-amber-500/10 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300 border-amber-500/30 gap-1">
+          <Badge variant="secondary" className="bg-amber-500/10 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300 border-amber-500/30 gap-1 font-semibold text-xs">
             <PauseCircle className="w-3.5 h-3.5" />
             Paused
           </Badge>
         );
       case "under_review":
         return (
-          <Badge variant="secondary" className="bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-500/30 gap-1">
+          <Badge variant="secondary" className="bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-500/30 gap-1 font-semibold text-xs">
             <Eye className="w-3.5 h-3.5 text-purple-600" />
             Under Review
           </Badge>
         );
       case "fixes_needed":
         return (
-          <Badge variant="secondary" className="bg-orange-500/10 text-orange-800 dark:text-orange-300 border-orange-500/30 gap-1 font-semibold">
+          <Badge variant="secondary" className="bg-orange-500/10 text-orange-800 dark:text-orange-300 border-orange-500/30 gap-1 font-semibold text-xs">
             <AlertTriangle className="w-3.5 h-3.5 text-orange-600" />
             Fixes Needed
           </Badge>
         );
       case "completed":
         return (
-          <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 gap-1">
+          <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 gap-1 font-semibold text-xs">
             <CheckCircle2 className="w-3.5 h-3.5" />
             Completed
           </Badge>
@@ -120,7 +122,7 @@ export default function TaskListPage() {
       case "not_started":
       default:
         return (
-          <Badge variant="outline" className="text-zinc-600 dark:text-zinc-400 gap-1">
+          <Badge variant="outline" className="text-zinc-600 dark:text-zinc-400 gap-1 text-xs">
             <HelpCircle className="w-3.5 h-3.5" />
             Not Started
           </Badge>
@@ -151,13 +153,13 @@ export default function TaskListPage() {
   });
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
+    <div className="w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">My Tasks</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            View your assigned tasks and track time worked on each item.
+            View your assigned tasks, track time, and submit completed work for review.
           </p>
         </div>
 
@@ -172,7 +174,7 @@ export default function TaskListPage() {
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-zinc-50 dark:bg-zinc-900/50 p-3 rounded-lg border border-zinc-200 dark:border-zinc-800">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-zinc-50 dark:bg-zinc-900/50 p-3 rounded-lg border border-zinc-200 dark:border-zinc-800 w-full">
         <div className="relative flex-1 max-w-md">
           <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
           <input
@@ -228,25 +230,19 @@ export default function TaskListPage() {
         </div>
       )}
 
+      {/* Tasks Table (Full Width) */}
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {[1, 2, 3, 4].map((i) => (
-            <Card key={i} className="p-6 space-y-4">
-              <div className="flex justify-between items-start">
-                <Skeleton className="h-6 w-3/4" />
-                <Skeleton className="h-5 w-20" />
-              </div>
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-2/3" />
-              <div className="pt-4 flex justify-between items-center border-t">
-                <Skeleton className="h-5 w-24" />
-                <Skeleton className="h-5 w-16" />
-              </div>
-            </Card>
+        <div className="w-full space-y-3">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="p-4 bg-white dark:bg-zinc-900 border rounded-xl flex items-center justify-between">
+              <Skeleton className="h-5 w-1/3" />
+              <Skeleton className="h-5 w-24" />
+              <Skeleton className="h-5 w-20" />
+            </div>
           ))}
         </div>
       ) : filteredTasks.length === 0 ? (
-        <Card className="p-8 text-center space-y-3">
+        <Card className="p-12 text-center space-y-3 w-full">
           <CardTitle className="text-base font-semibold">No tasks found</CardTitle>
           <CardDescription className="text-xs">
             {tasks.length === 0
@@ -255,51 +251,107 @@ export default function TaskListPage() {
           </CardDescription>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {filteredTasks.map((task) => (
-            <Link key={task._id} href={`/tasks/${task._id}`} className="group block focus:outline-none">
-              <Card className="h-full hover:border-zinc-400 dark:hover:border-zinc-600 transition-all shadow-xs group-hover:shadow-sm flex flex-col justify-between">
-                <CardHeader className="space-y-2 pb-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="space-y-1">
-                      <CardTitle className="text-base font-semibold group-hover:text-primary transition-colors line-clamp-2">
-                        {task.title}
-                      </CardTitle>
-                      {task.project?.name && (
-                        <Badge
-                          variant="outline"
-                          className="text-[11px] font-normal bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700"
+        <div className="w-full overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs">
+          <div className="overflow-x-auto w-full">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-zinc-50 dark:bg-zinc-800/60 border-b border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 uppercase text-[11px] font-semibold tracking-wider">
+                <tr>
+                  <th className="px-5 py-3.5">Task</th>
+                  <th className="px-4 py-3.5">Project</th>
+                  <th className="px-4 py-3.5">Status</th>
+                  <th className="px-4 py-3.5">Time Logged</th>
+                  <th className="px-4 py-3.5">Sessions</th>
+                  <th className="px-5 py-3.5 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
+                {filteredTasks.map((task) => (
+                  <tr
+                    key={task._id}
+                    className="hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 transition-colors group cursor-pointer"
+                    onClick={() => router.push(`/tasks/${task._id}`)}
+                  >
+                    {/* Task Title & Description */}
+                    <td className="px-5 py-4 align-top">
+                      <div className="space-y-1 max-w-lg">
+                        <Link
+                          href={`/tasks/${task._id}`}
+                          className="font-semibold text-sm text-foreground group-hover:text-primary transition-colors hover:underline block leading-snug"
+                          onClick={(e) => e.stopPropagation()}
                         >
-                          <Folder className="w-3 h-3 text-muted-foreground mr-1" />
-                          {task.project.name}
-                        </Badge>
-                      )}
-                    </div>
-                    {renderStatusBadge(task.status)}
-                  </div>
-                  <CardDescription className="line-clamp-2 text-xs">
-                    {task.description || "No description provided."}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="flex items-center justify-between text-xs text-muted-foreground border-t pt-3 mt-2">
-                    <div className="flex items-center gap-1.5 font-medium text-foreground">
-                      <Clock className="w-4 h-4 text-muted-foreground" />
-                      <span>Accumulated:</span>
-                      <span className="font-semibold text-zinc-900 dark:text-zinc-100">
-                        {formatDuration(task.totalDurationMinutes)}
-                      </span>
-                    </div>
+                          {task.title}
+                        </Link>
+                        {task.description && (
+                          <p className="text-xs text-muted-foreground line-clamp-1">{task.description}</p>
+                        )}
+                        {task.reviewNote && task.status === "fixes_needed" && (
+                          <p className="text-[11px] text-orange-700 dark:text-orange-300 italic line-clamp-1 flex items-center gap-1 font-medium mt-1">
+                            <AlertTriangle className="w-3 h-3 text-orange-600 shrink-0" />
+                            Note: "{task.reviewNote}"
+                          </p>
+                        )}
+                      </div>
+                    </td>
 
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground group-hover:text-foreground transition-colors font-medium">
-                      <span>Work on Task</span>
-                      <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
+                    {/* Project */}
+                    <td className="px-4 py-4 align-top whitespace-nowrap">
+                      {task.project?.name ? (
+                        <Link
+                          href={`/projects/${task.project._id}`}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Folder className="w-3 h-3 text-muted-foreground shrink-0" />
+                          <span className="truncate max-w-[140px]">{task.project.name}</span>
+                        </Link>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </td>
+
+                    {/* Status */}
+                    <td className="px-4 py-4 align-top whitespace-nowrap">
+                      {renderStatusBadge(task.status)}
+                    </td>
+
+                    {/* Time Logged */}
+                    <td className="px-4 py-4 align-top whitespace-nowrap">
+                      <div className="space-y-0.5">
+                        <span className="font-semibold text-xs text-foreground flex items-center gap-1">
+                          <Clock className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                          {formatDuration(task.totalDurationMinutes)}
+                        </span>
+                        {task.estimatedMinutes ? (
+                          <span className="text-muted-foreground text-[11px] block">
+                            est. {formatDuration(task.estimatedMinutes)}
+                          </span>
+                        ) : null}
+                      </div>
+                    </td>
+
+                    {/* Sessions */}
+                    <td className="px-4 py-4 align-top whitespace-nowrap text-xs text-muted-foreground font-medium">
+                      {task.sessionCount || 0} sessions
+                    </td>
+
+                    {/* Action Button */}
+                    <td className="px-5 py-4 align-top whitespace-nowrap text-right">
+                      <Link href={`/tasks/${task._id}`} onClick={(e) => e.stopPropagation()}>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 text-xs font-semibold gap-1.5 hover:bg-primary hover:text-primary-foreground cursor-pointer"
+                        >
+                          <span>{task.status === "completed" ? "View Details" : "Work on Task"}</span>
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </Button>
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>

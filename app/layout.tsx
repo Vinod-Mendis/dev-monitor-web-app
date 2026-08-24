@@ -1,9 +1,9 @@
-import { ClerkProvider } from "@clerk/nextjs";
+import { ClerkProvider, Show } from "@clerk/nextjs";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ActiveSessionProvider } from "@/components/ActiveSessionContext";
 import { ActiveSessionBanner } from "@/components/ActiveSessionBanner";
-import { Navbar } from "@/components/Navbar";
+import { AppSidebar } from "@/components/AppSidebar";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -17,8 +17,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Dev Monitor - Intern Time Tracking",
-  description: "Time tracking and task monitor for interns",
+  title: "Dev Monitor - Intern Time & Project Tracking",
+  description: "Live time tracking, review workflows, and project monitor for interns and admins",
 };
 
 export default function RootLayout({
@@ -31,12 +31,21 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100">
+      <body className="min-h-full flex flex-col bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans">
         <ClerkProvider>
           <ActiveSessionProvider>
-            <Navbar />
-            <ActiveSessionBanner />
-            <main className="flex-1">{children}</main>
+            <Show when="signed-in">
+              <AppSidebar>
+                <ActiveSessionBanner />
+                <div className="flex-1">{children}</div>
+              </AppSidebar>
+            </Show>
+
+            <Show when="signed-out">
+              <div className="min-h-screen flex flex-col items-center justify-center p-4">
+                {children}
+              </div>
+            </Show>
           </ActiveSessionProvider>
         </ClerkProvider>
       </body>

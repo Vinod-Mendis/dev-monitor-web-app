@@ -143,20 +143,14 @@ export default function ProjectsOverviewPage() {
 
   const renderPaceSignalBadge = (p: ProjectListItem) => {
     const signal = getDeadlinePaceSignal(p);
-    switch (signal) {
-      case "overdue":
-        return (
-          <Badge className="bg-destructive/15 text-destructive border-destructive/30 text-[10px] gap-1 font-bold">
-            <AlertTriangle className="w-3 h-3" /> Overdue
-          </Badge>
-        );
-      case "due_soon":
+    switch (signal.label) {
+      case "Behind Pace":
         return (
           <Badge className="bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-500/30 text-[10px] gap-1 font-bold">
-            <Clock className="w-3 h-3 text-amber-600" /> Due Soon
+            <AlertTriangle className="w-3 h-3 text-amber-600" /> Behind Pace
           </Badge>
         );
-      case "healthy":
+      case "On Track":
         return (
           <Badge className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20 text-[10px] gap-1 font-medium">
             On Track
@@ -179,7 +173,7 @@ export default function ProjectsOverviewPage() {
   });
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
+    <div className="w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-4">
         <div>
